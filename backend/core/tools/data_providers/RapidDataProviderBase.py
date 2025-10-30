@@ -1,6 +1,15 @@
 import os
 import requests
+import ssl
+import urllib3
 from typing import Dict, Any, Optional, TypedDict, Literal
+
+# Disable SSL warnings and verification
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+ssl._create_default_https_context = ssl._create_unverified_context
+
+# Configure requests to not verify SSL
+requests.packages.urllib3.disable_warnings()
 
 
 class EndpointSchema(TypedDict):
@@ -53,9 +62,9 @@ class RapidDataProviderBase:
         method = endpoint.get('method', 'GET').upper()
         
         if method == 'GET':
-            response = requests.get(url, params=payload, headers=headers)
+            response = requests.get(url, params=payload, headers=headers, verify=False)
         elif method == 'POST':
-            response = requests.post(url, json=payload, headers=headers)
+            response = requests.post(url, json=payload, headers=headers, verify=False)
         else:
             raise ValueError(f"Unsupported HTTP method: {method}")
         return response.json()

@@ -56,6 +56,22 @@ class SandboxToolsBase(Tool):
                     logger.info(f"Waiting 5 seconds for sandbox {sandbox_id} services to initialize...")
                     await asyncio.sleep(5)
                     
+                    # Test HTTP server health before generating preview URLs
+                    try:
+                        import aiohttp
+                        async with aiohttp.ClientSession() as session:
+                            health_url = f"{sandbox_obj.website_url}/health" if hasattr(sandbox_obj, 'website_url') else None
+                            if health_url:
+                                async with session.get(health_url, timeout=5) as response:
+                                    if response.status == 200:
+                                        logger.info(f"HTTP server health check passed for sandbox {sandbox_id}")
+                                    else:
+                                        logger.warning(f"HTTP server health check failed with status {response.status}")
+                            else:
+                                logger.info(f"Testing HTTP server connectivity for sandbox {sandbox_id}")
+                    except Exception as e:
+                        logger.warning(f"HTTP server health check failed for sandbox {sandbox_id}: {str(e)}")
+                    
                     # Gather preview links and token (best-effort parsing)
                     try:
                         vnc_link = await sandbox_obj.get_preview_link(6080)
@@ -63,9 +79,16 @@ class SandboxToolsBase(Tool):
                         vnc_url = vnc_link.url if hasattr(vnc_link, 'url') else str(vnc_link).split("url='")[1].split("'")[0]
                         website_url = website_link.url if hasattr(website_link, 'url') else str(website_link).split("url='")[1].split("'")[0]
                         token = vnc_link.token if hasattr(vnc_link, 'token') else (str(vnc_link).split("token='")[1].split("'")[0] if "token='" in str(vnc_link) else None)
-                    except Exception:
+                        
+                        # Log the preview URLs for debugging
+                        logger.info(f"Generated preview URLs for sandbox {sandbox_id}:")
+                        logger.info(f"  - VNC URL: {vnc_url}")
+                        logger.info(f"  - Website URL: {website_url}")
+                        logger.info(f"  - Token: {token}")
+                        
+                    except Exception as e:
                         # If preview link extraction fails, still proceed but leave fields None
-                        logger.warning(f"Failed to extract preview links for sandbox {sandbox_id}", exc_info=True)
+                        logger.warning(f"Failed to extract preview links for sandbox {sandbox_id}: {str(e)}", exc_info=True)
                         vnc_url = None
                         website_url = None
                         token = None

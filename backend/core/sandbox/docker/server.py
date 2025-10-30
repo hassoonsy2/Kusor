@@ -3,7 +3,13 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 import os
+import ssl
+import urllib3
 from pathlib import Path
+
+# Disable SSL warnings and verification
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+ssl._create_default_https_context = ssl._create_unverified_context
 
 # Import PDF router, PPTX router, DOCX router, and Visual HTML Editor router
 from html_to_pdf_router import router as pdf_router
@@ -44,6 +50,18 @@ output_dir.mkdir(exist_ok=True)
 
 # Initial directory creation
 os.makedirs(workspace_dir, exist_ok=True)
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for the server"""
+    return {
+        "status": "healthy",
+        "workspace_dir": workspace_dir,
+        "workspace_exists": os.path.exists(workspace_dir),
+        "server": "FastAPI",
+        "port": 8080
+    }
 
 # Add visual HTML editor root endpoint
 @app.get("/editor")
@@ -285,6 +303,13 @@ app.mount('/', StaticFiles(directory=workspace_dir), name='site')
 
 # This is needed for the import string approach with uvicorn
 if __name__ == '__main__':
-    print(f"Starting server with auto-reload, serving files from: {workspace_dir}")
+    print(f"🚀 Starting server with auto-reload, serving files from: {workspace_dir}")
+    print(f"📁 Workspace directory exists: {os.path.exists(workspace_dir)}")
+    print(f"🌐 Server will be available at: http://0.0.0.0:8080")
+    print(f"📋 Available endpoints:")
+    print(f"   - /editor - Visual HTML Editor")
+    print(f"   - /{filename}.html - Direct HTML file access")
+    print(f"   - /downloads - Generated PDFs")
+    
     # Don't use reload directly in the run call
-    uvicorn.run("server:app", host="0.0.0.0", port=8080, reload=True) 
+    uvicorn.run("server:app", host="0.0.0.0", port=8080, reload=True, log_level="info") 

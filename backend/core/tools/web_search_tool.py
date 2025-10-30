@@ -1,5 +1,7 @@
 from tavily import AsyncTavilyClient
 import httpx
+import ssl
+import urllib3
 from dotenv import load_dotenv
 from core.agentpress.tool import Tool, ToolResult, openapi_schema, tool_metadata
 from core.utils.config import config
@@ -9,6 +11,10 @@ import json
 import datetime
 import asyncio
 import logging
+
+# Disable SSL warnings and verification
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+ssl._create_default_https_context = ssl._create_unverified_context
 
 # TODO: add subpages, etc... in filters as sometimes its necessary 
 
@@ -268,7 +274,7 @@ class SandboxWebSearchTool(SandboxToolsBase):
         try:
             # ---------- Firecrawl scrape endpoint ----------
             logging.info(f"Sending request to Firecrawl for URL: {url}")
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(verify=False) as client:
                 headers = {
                     "Authorization": f"Bearer {self.firecrawl_api_key}",
                     "Content-Type": "application/json",

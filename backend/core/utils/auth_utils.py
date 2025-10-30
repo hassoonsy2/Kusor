@@ -265,7 +265,8 @@ get_optional_current_user_id_from_jwt = get_optional_user_id
 
 async def verify_and_get_agent_authorization(client, agent_id: str, user_id: str) -> dict:
     try:
-        agent_result = await client.table('agents').select('*').eq('agent_id', agent_id).eq('account_id', user_id).execute()
+        # Include both user's own agents AND public agents
+        agent_result = await client.table('agents').select('*').eq('agent_id', agent_id).or_(f"account_id.eq.{user_id},is_public.eq.true").execute()
         
         if not agent_result.data:
             raise HTTPException(status_code=404, detail="Agent not found or access denied")

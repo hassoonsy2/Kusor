@@ -136,15 +136,22 @@ class SandboxFilesTool(SandboxToolsBase):
             
             message = f"File '{file_path}' created successfully."
             
-            # Check if index.html was created and add 8080 server info (only in root workspace)
-            if file_path.lower() == 'index.html':
+            # Check if any HTML file was created and add 8080 server info
+            if file_path.lower().endswith('.html'):
                 try:
                     website_link = await self.sandbox.get_preview_link(8080)
                     website_url = website_link.url if hasattr(website_link, 'url') else str(website_link).split("url='")[1].split("'")[0]
-                    message += f"\n\n[Auto-detected index.html - HTTP server available at: {website_url}]"
-                    message += "\n[Note: Use the provided HTTP server URL above instead of starting a new server]"
+                    
+                    # Add specific file URL
+                    file_url = f"{website_url}/{file_path.replace('/workspace/', '')}"
+                    message += f"\n\n🌐 HTML file created! You can view it at: {file_url}"
+                    message += f"\n📋 Full sandbox URL: {website_url}"
+                    message += "\n💡 Tip: Use the file-specific URL above for direct access"
+                    
+                    logger.info(f"HTML file preview URL generated: {file_url}")
                 except Exception as e:
-                    logger.warning(f"Failed to get website URL for index.html: {str(e)}")
+                    logger.warning(f"Failed to get website URL for {file_path}: {str(e)}")
+                    message += f"\n\n⚠️ HTML file created but preview URL unavailable: {str(e)}"
             
             return self.success_response(message)
         except Exception as e:
@@ -258,15 +265,22 @@ class SandboxFilesTool(SandboxToolsBase):
             
             message = f"File '{file_path}' completely rewritten successfully."
             
-            # Check if index.html was rewritten and add 8080 server info (only in root workspace)
-            if file_path.lower() == 'index.html':
+            # Check if any HTML file was rewritten and add 8080 server info
+            if file_path.lower().endswith('.html'):
                 try:
                     website_link = await self.sandbox.get_preview_link(8080)
                     website_url = website_link.url if hasattr(website_link, 'url') else str(website_link).split("url='")[1].split("'")[0]
-                    message += f"\n\n[Auto-detected index.html - HTTP server available at: {website_url}]"
-                    message += "\n[Note: Use the provided HTTP server URL above instead of starting a new server]"
+                    
+                    # Add specific file URL
+                    file_url = f"{website_url}/{file_path.replace('/workspace/', '')}"
+                    message += f"\n\n🌐 HTML file updated! You can view it at: {file_url}"
+                    message += f"\n📋 Full sandbox URL: {website_url}"
+                    message += "\n💡 Tip: Use the file-specific URL above for direct access"
+                    
+                    logger.info(f"HTML file preview URL generated: {file_url}")
                 except Exception as e:
-                    logger.warning(f"Failed to get website URL for index.html: {str(e)}")
+                    logger.warning(f"Failed to get website URL for {file_path}: {str(e)}")
+                    message += f"\n\n⚠️ HTML file updated but preview URL unavailable: {str(e)}"
             
             return self.success_response(message)
         except Exception as e:

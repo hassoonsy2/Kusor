@@ -129,7 +129,8 @@ class AgentService:
             raise
 
     def _build_base_query(self, user_id: str, filters: AgentFilters):
-        query = self.db.table('agents').select('*').eq("account_id", user_id)
+        # Fetch both user's own agents AND public agents
+        query = self.db.table('agents').select('*').or_(f"account_id.eq.{user_id},is_public.eq.true")
         
         if filters.search:
             search_term = f"%{filters.search}%"
@@ -145,7 +146,8 @@ class AgentService:
         return query
 
     def _build_count_query(self, user_id: str, filters: AgentFilters):
-        query = self.db.table('agents').select('*', count='exact').eq("account_id", user_id)
+        # Count both user's own agents AND public agents
+        query = self.db.table('agents').select('*', count='exact').or_(f"account_id.eq.{user_id},is_public.eq.true")
         
         if filters.search:
             search_term = f"%{filters.search}%"

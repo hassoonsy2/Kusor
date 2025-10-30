@@ -3,6 +3,7 @@
 import React, { forwardRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Paperclip, Loader2 } from 'lucide-react';
+import { TopFolderIcon } from '@/components/dashboard/lottie-components';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -369,7 +370,7 @@ export const FileUploadHandler = forwardRef<
                   {isUploading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Paperclip className="h-4 w-4" />
+                    <TopFolderIcon size={24} />
                   )}
                 </Button>
               </span>
